@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const client = require("../config/db");
+const pool = require("../config/db");
 const crypto = require("crypto");
 const dotenv = require("dotenv");
 const PDFDocument = require("pdfkit");
@@ -192,7 +192,7 @@ const verifyVerificationToken = async (req, res) => {
       SELECT * FROM tenants WHERE verificationtoken = $1
     `;
 
-    const result = await client.query(findTenantQuery, [hashedToken]);
+    const result = await pool.query(findTenantQuery, [hashedToken]);
 
     if (result.rows.length === 0) {
       return res.status(400).json({ message: "Invalid or expired token" });
@@ -212,7 +212,7 @@ const verifyVerificationToken = async (req, res) => {
       SET isverified = true
       WHERE id = $1
     `;
-    await client.query(updateTenantQuery, [tenant.id]);
+    await pool.query(updateTenantQuery, [tenant.id]);
 
     // await sendAccountConfirmationEmail(tenant.email);
 
@@ -233,7 +233,7 @@ const resendVerificationEmail = async (req, res) => {
   try {
     //Check if tenant exisits
     const findTenantQuery = `SELECT * FROM tenants WHERE email =$1`;
-    const result = await client.query(findTenantQuery, [email]);
+    const result = await pool.query(findTenantQuery, [email]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "Tenant not found." });
@@ -264,7 +264,7 @@ const resendVerificationEmail = async (req, res) => {
       WHERE email = $3
       `;
 
-    await client.query(updateTokenQuery, [hashedToken, newExpiry, email]);
+    await pool.query(updateTokenQuery, [hashedToken, newExpiry, email]);
 
     //Send verification email
     await sendVerificationEmail(email, plainToken);
@@ -401,7 +401,7 @@ const resendPasswordResetEmail = async (req, res) => {
     }
 
     // Check if tenant exists
-    const result = await client.query(
+    const result = await pool.query(
       "SELECT * FROM tenants WHERE email = $1",
       [email]
     );
@@ -419,7 +419,7 @@ const resendPasswordResetEmail = async (req, res) => {
       .digest("hex");
     const expiry = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes from now
 
-    await client.query(
+    await pool.query(
       `UPDATE tenants 
        SET passwordresettoken = $1, passwordresettokenexpiry = $2 
        WHERE email = $3`,
@@ -446,7 +446,7 @@ const verifyPasswordResetToken = async (req, res) => {
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    const result = await client.query(
+    const result = await pool.query(
       `SELECT email, passwordresettokenexpiry 
        FROM tenants 
        WHERE passwordresettoken = $1`,

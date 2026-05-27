@@ -1,33 +1,28 @@
-// db.js
-const { Client } = require("pg");
+const { Pool } = require("pg");
 const dotenv = require("dotenv");
 
 dotenv.config();
 
-let client;
+let pool;
 
-if (process.env.DATABASE_URL) {
-  //Production Mode
-  client = new Client({
+if (process.env.NODE_ENV === "production") {
+  pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false,
-    },
+    ssl: { rejectUnauthorized: false },
   });
 } else {
-  //Local/Dev Mode
-  client = new Client({
-    user: process.env.DB_USER,
+  pool = new Pool({
     host: process.env.DB_HOST,
-    database: process.env.DB_DATABASE,
-    password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
   });
 }
 
-client
+pool
   .connect()
-  .then(() => console.log("Database connected successfully."))
-  .catch((error) => console.log("Something is definitely wrong.", error));
+  .then(() => console.log("Connected to PostgreSQL database"))
+  .catch((err) => console.error("Connection error", err.stack));
 
-module.exports = client;
+module.exports = pool;

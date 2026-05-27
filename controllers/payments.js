@@ -1,9 +1,9 @@
-const client = require("../config/db");
+const pool = require("../config/db");
 
 //Get All Payments
 const getAllPayments = async (req, res) => {
   try {
-    const payments = await client.query(`
+    const payments = await pool.query(`
       SELECT 
         p.paymentid,
          (t.firstname || ' ' || t.lastname) AS tenantname,
@@ -33,7 +33,7 @@ const getUsersPayment = async (req, res) => {
 
   try {
     const query = `SELECT * FROM payment WHERE tenantid = $1 ORDER BY paymentdate DESC`;
-    const result = await client.query(query, [tenantId]);
+    const result = await pool.query(query, [tenantId]);
 
     res.status(200).json(result.rows);
   } catch (error) {

@@ -1,9 +1,9 @@
-const client = require("../config/db");
+const pool = require("../config/db");
 
 //Get Technicians
 const getTechnicians = async (req, res) => {
   try {
-    const technicians = await client.query("SELECT * FROM technicians");
+    const technicians = await pool.query("SELECT * FROM technicians");
     res.status(200).json(technicians.rows);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch technicians" });
@@ -16,7 +16,7 @@ const assignTechnician = async (req, res) => {
     const requestId = req.params.requestId;
 
     //Get request category
-    const requestResult = await client.query(
+    const requestResult = await pool.query(
       `SELECT category FROM maintenance_requests WHERE id = $1`,
       [requestId]
     );
@@ -29,7 +29,7 @@ const assignTechnician = async (req, res) => {
     }
 
     // Find a technician with matching specialty
-    const techResult = await client.query(
+    const techResult = await pool.query(
       `SELECT id FROM technicians WHERE specialty = $1 ORDER BY RANDOM() LIMIT 1`,
       [category]
     );
@@ -42,7 +42,7 @@ const assignTechnician = async (req, res) => {
     }
 
     // Assign technician to the request
-    await client.query(
+    await pool.query(
       `UPDATE maintenance_requests SET technician_id = $1 WHERE id = $2`,
       [technician.id, requestId]
     );

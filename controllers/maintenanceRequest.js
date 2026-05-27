@@ -1,4 +1,4 @@
-const client = require("../config/db");
+const pool = require("../config/db");
 const { sendMaintenanceRequestEmail } = require("../controllers/emailService");
 const { createMaintenanceReport } = require("../controllers/reports");
 const { createNotification } = require("../controllers/notifications");
@@ -14,7 +14,7 @@ const getRequests = async (req, res) => {
 
     `;
 
-    const result = await client.query(query);
+    const result = await pool.query(query);
 
     res.status(200).json(result.rows);
   } catch (error) {
@@ -34,7 +34,7 @@ const getUserRequest = async (req, res) => {
       ORDER BY request_date DESC;
     `;
 
-    const result = await client.query(query, [tenantId]);
+    const result = await pool.query(query, [tenantId]);
 
     res.status(200).json(result.rows);
   } catch (error) {
@@ -61,7 +61,7 @@ const createRequest = async (req, res) => {
       VALUES ($1, $2, 'Pending', $3) RETURNING *;
     `;
 
-    const result = await client.query(insertQuery, [
+    const result = await pool.query(insertQuery, [
       tenantId,
       issueDescription,
       category,
@@ -69,7 +69,7 @@ const createRequest = async (req, res) => {
     const request = result.rows[0];
 
     // Step 2: Find a technician that matches the category
-    const techResult = await client.query(
+    const techResult = await pool.query(
       `SELECT id, full_name FROM technicians WHERE specialty = $1 ORDER BY RANDOM() LIMIT 1`,
       [category]
     );
@@ -78,7 +78,7 @@ const createRequest = async (req, res) => {
 
     if (technician) {
       // Step 3: Assign technician to this request
-      await client.query(
+      await pool.query(
         `UPDATE maintenance_requests SET technician_id = $1 WHERE request_id = $2`,
 
         [technician.id, request.request_id]
@@ -87,7 +87,7 @@ const createRequest = async (req, res) => {
       delete request.technician_id;
     }
 
-    const tenantResult = await client.query(
+    const tenantResult = await pool.query(
       `SELECT email FROM tenants WHERE id = $1`,
       [tenantId]
     );
@@ -129,7 +129,7 @@ const completeRequest = async (req, res) => {
       RETURNING *;
     `;
 
-    const result = await client.query(updateQuery, [requestId]);
+    const result = await pool.query(updateQuery, [requestId]);
 
     if (result.rowCount === 0) {
       return res.status(404).json({ message: "Request not found." });
@@ -143,7 +143,7 @@ const completeRequest = async (req, res) => {
       FROM tenants 
       WHERE id = $1;
     `;
-    const tenantResult = await client.query(tenantQuery, [request.tenant_id]);
+    const tenantResult = await pool.query(tenantQuery, [request.tenant_id]);
 
     if (tenantResult.rows.length === 0) {
       console.warn(`Tenant not found for tenant_id: ${request.tenant_id}`);
@@ -179,7 +179,7 @@ const completeRequest = async (req, res) => {
       SET maintenance_status = 'Completed'
       WHERE id = $1;
     `;
-    await client.query(updateStatusQuery, [report.id]);
+    await pool.query(updateStatusQuery, [report.id]);
 
     //Create a maintenance request
     await createNotification(

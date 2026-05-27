@@ -1,5 +1,5 @@
 const Stripe = require("stripe");
-const client = require("../config/db");
+const pool = require("../config/db");
 const { createPaymentReport } = require("../controllers/reports");
 const { sendRentPaymentEmail } = require("../controllers/emailService");
 const { createNotification } = require("../controllers/notifications");
@@ -35,7 +35,7 @@ const handleWebhook = async (req, res) => {
 
         // Fetch tenant ID using apartmentnumber
         const tenantIdQuery = `SELECT id FROM tenants WHERE apartmentnumber = $1`;
-        const tenantIdResult = await client.query(tenantIdQuery, [
+        const tenantIdResult = await pool.query(tenantIdQuery, [
           apartmentNumber,
         ]);
 
@@ -47,12 +47,12 @@ const handleWebhook = async (req, res) => {
 
         // Update payment status
         const updateQuery = `UPDATE payment SET paymentstatus = $1 WHERE paymentid = $2`;
-        await client.query(updateQuery, ["paid", paymentId]);
+        await pool.query(updateQuery, ["paid", paymentId]);
         console.log(`Payment ${paymentId} marked as paid`);
 
         // Fetch tenant details
         const tenantQuery = `SELECT firstname, lastname, apartmentnumber, email FROM tenants WHERE id = $1`;
-        const tenantResult = await client.query(tenantQuery, [tenantId]);
+        const tenantResult = await pool.query(tenantQuery, [tenantId]);
 
         if (tenantResult.rows.length === 0) {
           throw new Error("Tenant not found");
@@ -107,7 +107,7 @@ const handleWebhook = async (req, res) => {
       try {
         if (failedPaymentId) {
           const updateQuery = `UPDATE payment SET paymentstatus = $1 WHERE paymentid = $2`;
-          await client.query(updateQuery, ["failed", failedPaymentId]);
+          await pool.query(updateQuery, ["failed", failedPaymentId]);
           console.log(`Payment ${failedPaymentId} marked as failed`);
         }
         return res.status(200).send("Webhook received and processed.");
@@ -134,34 +134,34 @@ const handleMpesaCallback = async (req, res) => {
       const amount = metadata.find((item) => item.Name === "Amount")?.Value;
       const phone = metadata.find((item) => item.Name === "PhoneNumber")?.Value;
 
-      // 🔥 OPTIONAL: Look up tenantid by phone number
+      //Look up tenantid by phone number
       const findTenantQuery = `SELECT tenantid FROM tenant WHERE phonenumber = $1`;
-      const tenantResult = await client.query(findTenantQuery, [phone]);
+      const tenantResult = await pool.query(findTenantQuery, [phone]);
 
       if (tenantResult.rows.length === 0) {
-        console.error("🚫 No tenant found with phone number:", phone);
+        console.error("No tenant found with phone number:", phone);
         return res.status(404).send("Tenant not found.");
       }
 
       const tenantId = tenantResult.rows[0].tenantid;
 
-      // ✅ Now insert into payment table
+      // Now insert into payment table
       const insertQuery = `
         INSERT INTO payment (tenantid, amountpaid, paymentdate, paymentmethod, paymentstatus)
         VALUES ($1, $2, CURRENT_DATE, $3, $4)
       `;
 
-      await client.query(insertQuery, [tenantId, amount, "mpesa", "paid"]);
+      await pool.query(insertQuery, [tenantId, amount, "mpesa", "paid"]);
 
-      console.log("✅ M-PESA payment recorded for tenant:", tenantId);
+      console.log("M-PESA payment recorded for tenant:", tenantId);
     } else {
-      console.log(`❌ M-PESA transaction failed. Reason: ${ResultDesc}`);
+      console.log(`M-PESA transaction failed. Reason: ${ResultDesc}`);
       // You can also log it to a separate table if you want
     }
 
     res.status(200).json({ message: "Callback received successfully" });
   } catch (error) {
-    console.error("❌ Error handling M-PESA callback:", error.message);
+    console.error("Error handling M-PESA callback:", error.message);
     res.status(500).send("Server error");
   }
 };

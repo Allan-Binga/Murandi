@@ -4,8 +4,7 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
-// Load environment variables
-dotenv.config();
+// Declare App
 const app = express();
 
 // Webhook Route (placed at the top for priority)

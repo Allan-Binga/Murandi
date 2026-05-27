@@ -1,6 +1,6 @@
 const dotenv = require("dotenv");
 const Stripe = require("stripe");
-const client = require("../config/db");
+const pool = require("../config/db");
 const moment = require("moment");
 const axios = require("axios");
 
@@ -14,7 +14,7 @@ const createRentCheckoutSession = async (req, res) => {
   try {
     //Find Tenant Apartment's Number
     const tenantQuery = `SELECT apartmentnumber, email FROM tenants WHERE id = $1`;
-    const tenantResult = await client.query(tenantQuery, [tenantId]);
+    const tenantResult = await pool.query(tenantQuery, [tenantId]);
 
     if (tenantResult.rows.length === 0) {
       return res.status(404).json({ error: "Tenant not found" });
@@ -25,7 +25,7 @@ const createRentCheckoutSession = async (req, res) => {
 
     //Get rent amount from apartment_listings
     const rentQuery = `SELECT price, IMAGE FROM apartment_listings WHERE apartmentnumber = $1`;
-    const rentResult = await client.query(rentQuery, [apartmentNumber]);
+    const rentResult = await pool.query(rentQuery, [apartmentNumber]);
 
     if (rentResult.rows.length === 0) {
       return res.status(404).json({ error: "Apartment listing not found" });
@@ -46,7 +46,7 @@ const createRentCheckoutSession = async (req, res) => {
         AND paymentdate > $2
         AND paymentstatus = 'pending' 
     `;
-    const paymentCheckResult = await client.query(paymentCheckQuery, [
+    const paymentCheckResult = await pool.query(paymentCheckQuery, [
       tenantId,
       thirtyDaysAgoString,
     ]);
@@ -65,7 +65,7 @@ const createRentCheckoutSession = async (req, res) => {
     `;
 
     const values = [tenantId, rentAmount, today, "stripe", "pending"];
-    const result = await client.query(insertPaymentQuery, values);
+    const result = await pool.query(insertPaymentQuery, values);
     const paymentId = result.rows[0].paymentid;
 
     //Stripe Session

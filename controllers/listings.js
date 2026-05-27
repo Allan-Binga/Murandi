@@ -1,9 +1,9 @@
-const client = require("../config/db");
+const pool = require("../config/db");
 
 //Fetch all listings
 const getListings = async (req, res) => {
   try {
-    const listings = await client.query("SELECT * FROM apartment_listings");
+    const listings = await pool.query("SELECT * FROM apartment_listings");
     res.status(200).json(listings.rows);
   } catch (error) {
     res.status(500).json({ message: "Could not fetch listings." });
@@ -22,7 +22,7 @@ const getUserLeasedApartment = async (req, res) => {
       WHERE t.id = $1
     `;
 
-    const result = await client.query(query, [tenantId]);
+    const result = await pool.query(query, [tenantId]);
 
     if (result.rows.length === 0) {
       return res
@@ -113,7 +113,7 @@ const createListing = async (req, res) => {
       RETURNING id, title, description, price, square_feet, image, apartmentnumber, created_at, updated_at
     `;
 
-    const result = await client.query(insertListingQuery, [
+    const result = await pool.query(insertListingQuery, [
       title,
       description,
       price,
@@ -180,7 +180,7 @@ const updateListing = async (req, res) => {
 
     values.push(id); // final value is the id
 
-    const result = await client.query(updateQuery, values);
+    const result = await pool.query(updateQuery, values);
 
     if (result.rowCount === 0) {
       return res.status(404).json({ message: "Listing not found." });
@@ -202,7 +202,7 @@ const deleteListing = async (req, res) => {
     const { id } = req.params;
 
     const deleteQuery = `DELETE FROM apartment_listings WHERE id = $1 RETURNING *`;
-    const result = await client.query(deleteQuery, [id]);
+    const result = await pool.query(deleteQuery, [id]);
 
     if (result.rowCount === 0) {
       return res.status(404).json({ message: "Listing not found." });

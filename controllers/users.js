@@ -1,10 +1,10 @@
-const client = require("../config/db");
+const pool = require("../config/db");
 const jwt = require("jsonwebtoken");
 
 //Fetch All Tenants
 const getTenants = async (req, res) => {
   try {
-    const tenants = await client.query("SELECT * FROM tenants");
+    const tenants = await pool.query("SELECT * FROM tenants");
 
     res.status(200).json(tenants.rows);
   } catch (error) {
@@ -24,7 +24,7 @@ const getSingleTenant = async (req, res) => {
 
   try {
     // Fetch tenant details
-    const tenantResult = await client.query(
+    const tenantResult = await pool.query(
       "SELECT * FROM tenants WHERE id = $1",
       [id]
     );
@@ -37,7 +37,7 @@ const getSingleTenant = async (req, res) => {
 
     // Fetch most recent payment and calculate next rent due (add 30 days)
     let nextPaymentDate = null;
-    const paymentResult = await client.query(
+    const paymentResult = await pool.query(
       `SELECT paymentdate FROM payment WHERE tenantid = $1 ORDER BY paymentdate DESC LIMIT 1`,
       [id]
     );
@@ -49,7 +49,7 @@ const getSingleTenant = async (req, res) => {
     }
 
     // Fetch latest maintenance request (status + request_date)
-    const maintenanceResult = await client.query(
+    const maintenanceResult = await pool.query(
       `SELECT status, request_date FROM maintenance_requests WHERE tenant_id = $1 ORDER BY request_date DESC LIMIT 1`,
       [id]
     );
@@ -67,7 +67,7 @@ const getSingleTenant = async (req, res) => {
     // Fetch apartment listing price using apartmentnumber
     let apartmentPrice = null;
     if (tenant.apartmentnumber) {
-      const apartmentResult = await client.query(
+      const apartmentResult = await pool.query(
         "SELECT price FROM apartment_listings WHERE apartmentnumber = $1",
         [tenant.apartmentnumber]
       );
@@ -77,7 +77,7 @@ const getSingleTenant = async (req, res) => {
     }
 
     // Fetch PDF from receipts table
-    const receiptResult = await client.query(
+    const receiptResult = await pool.query(
       "SELECT pdf FROM receipts WHERE tenant_id = $1 LIMIT 1",
       [id]
     );
@@ -113,7 +113,7 @@ const getCurrentMurandiUser = (req, res) => {
 //Fetch All Landlords
 const getLandlords = async (req, res) => {
   try {
-    const landlords = await client.query("SELECT * FROM landlords");
+    const landlords = await pool.query("SELECT * FROM landlords");
     res.status(200).json(landlords.rows);
   } catch (error) {
     res.status(500).json("Could not fetch tenants.");
@@ -123,7 +123,7 @@ const getLandlords = async (req, res) => {
 //Fetch Admins
 const getAdmins = async (req, res) => {
   try {
-    const admins = await client.query("SELECT * FROM admins");
+    const admins = await pool.query("SELECT * FROM admins");
     res.status(200).json(admins.rows);
   } catch (error) {
     res.status(500).json("Could not fetch tenants.");
@@ -134,9 +134,9 @@ const getAdmins = async (req, res) => {
 const getAllMurandiUsers = async (req, res) => {
   try {
     const [tenants, landlords, admins] = await Promise.all([
-      client.query("SELECT * FROM tenants"),
-      client.query("SELECT * FROM landlords"),
-      client.query("SELECT * FROM admins"),
+      pool.query("SELECT * FROM tenants"),
+      pool.query("SELECT * FROM landlords"),
+      pool.query("SELECT * FROM admins"),
     ]);
 
     res.status(200).json({

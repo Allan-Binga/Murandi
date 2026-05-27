@@ -1,4 +1,4 @@
-const client = require("../config/db.js");
+const pool = require("../config/db.js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
@@ -73,7 +73,7 @@ const registerTenant = async (req, res) => {
   try {
     // Check if tenant already exists by email
     const checkTenantQuery = "SELECT * FROM tenants WHERE email = $1";
-    const existingTenant = await client.query(checkTenantQuery, [email]);
+    const existingTenant = await pool.query(checkTenantQuery, [email]);
 
     if (existingTenant.rows.length > 0) {
       return res
@@ -83,7 +83,7 @@ const registerTenant = async (req, res) => {
 
     // Check if tenant already exists by phone number
     const checkPhoneQuery = "SELECT * FROM tenants WHERE phoneNumber = $1";
-    const existingPhone = await client.query(checkPhoneQuery, [phoneNumber]);
+    const existingPhone = await pool.query(checkPhoneQuery, [phoneNumber]);
 
     if (existingPhone.rows.length > 0) {
       return res.status(409).json({
@@ -95,7 +95,7 @@ const registerTenant = async (req, res) => {
     //Check if apartment exists in listing
     const listingCheckQuery =
       "SELECT * FROM apartment_listings WHERE apartmentNumber = $1";
-    const listingResult = await client.query(listingCheckQuery, [
+    const listingResult = await pool.query(listingCheckQuery, [
       apartmentNumber,
     ]);
 
@@ -108,7 +108,7 @@ const registerTenant = async (req, res) => {
     //Check if apartment is already occupied
     const occupancyCheckQuery =
       "SELECT * FROM tenants WHERE apartmentNumber = $1";
-    const occupied = await client.query(occupancyCheckQuery, [apartmentNumber]);
+    const occupied = await pool.query(occupancyCheckQuery, [apartmentNumber]);
 
     if (occupied.rows.length > 0) {
       return res
@@ -146,7 +146,7 @@ const registerTenant = async (req, res) => {
   `;
 
     //Save Tenant to PostgreSQL
-    const newTenant = await client.query(insertTenantQuery, [
+    const newTenant = await pool.query(insertTenantQuery, [
       firstName,
       lastName,
       email,
@@ -165,7 +165,7 @@ const registerTenant = async (req, res) => {
     // Update apartment leasingstatus to Leased
     const updateApartmentQuery =
       "UPDATE apartment_listings SET leasingstatus = 'Leased' WHERE apartmentnumber = $1";
-    await client.query(updateApartmentQuery, [apartmentNumber]);
+    await pool.query(updateApartmentQuery, [apartmentNumber]);
 
     // Send email with plainToken
     await sendVerificationEmail(email, plainToken);
@@ -183,7 +183,7 @@ const registerTenant = async (req, res) => {
     );
 
     // Commit the transaction
-    await client.query("COMMIT");
+    await pool.query("COMMIT");
 
     res.status(201).json({
       message: "You have registered successfully.",
@@ -205,7 +205,7 @@ const loginTenant = async (req, res) => {
   try {
     // Check if tenant exists by email
     const checkTenantQuery = "SELECT * FROM tenants WHERE email = $1";
-    const tenant = await client.query(checkTenantQuery, [email]);
+    const tenant = await pool.query(checkTenantQuery, [email]);
 
     if (tenant.rows.length === 0) {
       return res.status(401).json({ message: "Invalid credentials." });
@@ -299,7 +299,7 @@ const registerLandlord = async (req, res) => {
   try {
     // Check if landlord already exists by email
     const checkLandlordQuery = "SELECT * FROM landlords WHERE email = $1";
-    const existingLandlord = await client.query(checkLandlordQuery, [email]);
+    const existingLandlord = await pool.query(checkLandlordQuery, [email]);
 
     if (existingLandlord.rows.length > 0) {
       return res
@@ -309,7 +309,7 @@ const registerLandlord = async (req, res) => {
 
     // Check if landlord already exists by phone number
     const checkPhoneQuery = "SELECT * FROM landlords WHERE phoneNumber = $1";
-    const existingPhone = await client.query(checkPhoneQuery, [phoneNumber]);
+    const existingPhone = await pool.query(checkPhoneQuery, [phoneNumber]);
 
     if (existingPhone.rows.length > 0) {
       return res.status(409).json({
@@ -328,7 +328,7 @@ const registerLandlord = async (req, res) => {
       RETURNING id, firstName, lastName, email, phoneNumber
     `;
 
-    const newLandlord = await client.query(insertLandlordQuery, [
+    const newLandlord = await pool.query(insertLandlordQuery, [
       firstName,
       lastName,
       email,
@@ -356,7 +356,7 @@ const loginLandlord = async (req, res) => {
   try {
     //Check if landlord exists
     const checkLandlordQuery = "SELECT * FROM landlords WHERE email = $1";
-    const landlord = await client.query(checkLandlordQuery, [email]);
+    const landlord = await pool.query(checkLandlordQuery, [email]);
 
     if (landlord.rows.length === 0) {
       return res.status(401).json({ message: "Invalid credentials." });
@@ -446,7 +446,7 @@ const registerAdmin = async (req, res) => {
   try {
     //Check if Admin exists
     const checkAdminQuery = "SELECT * FROM admins WHERE email = $1";
-    const existingAdmin = await client.query(checkAdminQuery, [email]);
+    const existingAdmin = await pool.query(checkAdminQuery, [email]);
 
     if (existingAdmin.rows.length > 0) {
       return res
@@ -465,7 +465,7 @@ const registerAdmin = async (req, res) => {
     `;
 
     //Save to postgreSQL
-    const newAdmin = await client.query(insertAdminQuery, [
+    const newAdmin = await pool.query(insertAdminQuery, [
       email,
       hashedPassword,
     ]);
@@ -486,7 +486,7 @@ const loginAdmin = async (req, res) => {
   try {
     //Check if admin exists
     const checkAdminQuery = "SELECT * FROM admins WHERE email = $1";
-    const admin = await client.query(checkAdminQuery, [email]);
+    const admin = await pool.query(checkAdminQuery, [email]);
 
     if (admin.rows.length === 0) {
       return res.status(401).json({ message: "Invalid credentials" });

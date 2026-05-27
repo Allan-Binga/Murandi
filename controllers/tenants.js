@@ -1,4 +1,4 @@
-const client = require("../config/db");
+const pool = require("../config/db");
 
 // Update tenant information
 const updateInformation = async (req, res) => {
@@ -11,7 +11,7 @@ const updateInformation = async (req, res) => {
   try {
     // Check if tenant exists
     const checkQuery = "SELECT * FROM tenants WHERE id = $1";
-    const checkResult = await client.query(checkQuery, [tenantId]);
+    const checkResult = await pool.query(checkQuery, [tenantId]);
 
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: "Tenant not found." });
@@ -68,7 +68,7 @@ const updateInformation = async (req, res) => {
     if (apartmentnumber) {
       const checkApartmentQuery =
         "SELECT 1 FROM apartment_listings WHERE apartmentnumber = $1 LIMIT 1";
-      const aptResult = await client.query(checkApartmentQuery, [
+      const aptResult = await pool.query(checkApartmentQuery, [
         apartmentnumber,
       ]);
 
@@ -94,7 +94,7 @@ const updateInformation = async (req, res) => {
     `;
     values.push(tenantId);
 
-    const updateResult = await client.query(updateQuery, values);
+    const updateResult = await pool.query(updateQuery, values);
 
     res.status(200).json({
       message: "Tenant information updated successfully.",
@@ -114,7 +114,7 @@ const deleteTenant = async (req, res) => {
   try {
     //Retrieve apartment number for the tenant
     const getTenantQuery = "SELECT apartmentnumber FROM tenants WHERE id = $1";
-    const tenantResult = await client.query(getTenantQuery, [tenantId]);
+    const tenantResult = await pool.query(getTenantQuery, [tenantId]);
 
     if (tenantResult.rows.length === 0) {
       return res.status(404).json({ message: "Tenant not found." });
@@ -123,14 +123,14 @@ const deleteTenant = async (req, res) => {
     const apartmentNumber = tenantResult.rows[0].apartmentnumber;
 
     const deleteTenantQuery = "DELETE FROM tenants WHERE id = $1";
-    await client.query(deleteTenantQuery, [tenantId]);
+    await pool.query(deleteTenantQuery, [tenantId]);
 
     const updateApartmentStatusQuery = `
     UPDATE apartment_listings 
     SET leasingstatus = 'Unleased' 
     WHERE apartmentnumber = $1
   `;
-    await client.query(updateApartmentStatusQuery, [apartmentNumber]);
+    await pool.query(updateApartmentStatusQuery, [apartmentNumber]);
 
     res
       .status(200)

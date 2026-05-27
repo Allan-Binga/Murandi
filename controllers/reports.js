@@ -1,4 +1,4 @@
-const client = require("../config/db");
+const pool = require("../config/db");
 
 // Create Payment Report
 const createPaymentReport = async (reportData) => {
@@ -34,7 +34,7 @@ const createPaymentReport = async (reportData) => {
       payment_status,
     ];
 
-    const result = await client.query(query, values);
+    const result = await pool.query(query, values);
     return result.rows[0];
   } catch (error) {
     console.error("Error creating payment report:", error.message);
@@ -70,7 +70,7 @@ const createMaintenanceReport = async (maintenanceData) => {
 
     const values = [tenant_name, apartment_id, issue_description, category];
 
-    const result = await client.query(query, values);
+    const result = await pool.query(query, values);
     return result.rows[0];
   } catch (error) {
     console.error("Error creating maintenance report:", error.message);
@@ -81,7 +81,7 @@ const createMaintenanceReport = async (maintenanceData) => {
 //Get reports
 const getReports = async (req, res) => {
   try {
-    const reports = await client.query("SELECT * FROM reports");
+    const reports = await pool.query("SELECT * FROM reports");
     res.status(200).json(reports.rows);
   } catch (error) {
     res.status(500).json({ message: "Could not fetch reports" });
@@ -91,7 +91,7 @@ const getReports = async (req, res) => {
 //Get payment reports
 const getPaymentReports = async (req, res) => {
   try {
-    const paymentReports = await client.query(`
+    const paymentReports = await pool.query(`
         SELECT id, report_type, tenant_name, apartment_id, amount_paid, payment_date, payment_status, created_at
         FROM reports
         WHERE report_type = 'payment'
@@ -105,7 +105,7 @@ const getPaymentReports = async (req, res) => {
 //Get MAintenance Reports
 const getMaintenanceReports = async (req, res) => {
   try {
-    const maintenanceReports = await client.query(`
+    const maintenanceReports = await pool.query(`
             SELECT id report_type, tenant_name, apartment_id, issue_title, issue_description, maintenance_status, created_at
             FROM reports
             WHERE report_type = 'maintenance'`);

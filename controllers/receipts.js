@@ -1,4 +1,4 @@
-const client = require("../config/db");
+const pool = require("../config/db");
 
 const getReceipts = async () => {
   try {

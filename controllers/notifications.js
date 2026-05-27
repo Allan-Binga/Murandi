@@ -1,9 +1,9 @@
-const client = require("../config/db");
+const pool = require("../config/db");
 
 //Get All Notifications
 const getNotifications = async (req, res) => {
   try {
-    const notis = await client.query(`SELECT * FROM notifications`);
+    const notis = await pool.query(`SELECT * FROM notifications`);
     res.status(200).json(notis.rows);
   } catch (error) {
     res.status(500).json({ message: "Could not fetch notifications." });
@@ -13,7 +13,7 @@ const getNotifications = async (req, res) => {
 //Notification Creation/Message
 const createNotification = async (tenantId, message) => {
   try {
-    await client.query(
+    await pool.query(
       `INSERT INTO notifications (tenant_id, message)
          VALUES ($1, $2)`,
       [tenantId, message]
@@ -35,7 +35,7 @@ const getMyNotifications = async (req, res) => {
   }
 
   try {
-    const result = await client.query(
+    const result = await pool.query(
       `SELECT * FROM notifications WHERE tenant_id = $1 ORDER BY notification_date DESC`,
       [tenantId]
     );
@@ -58,7 +58,7 @@ const markNotificationAsRead = async (req, res) => {
   }
 
   try {
-    const result = await client.query(
+    const result = await pool.query(
       `UPDATE notifications 
        SET status = 'read' 
        WHERE notification_id = $1 AND tenant_id = $2 

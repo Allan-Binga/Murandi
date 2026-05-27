@@ -1,4 +1,4 @@
-const client = require("../config/db");
+const pool = require("../config/db");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { sendPasswordResetEmail } = require("./emailService");
@@ -14,7 +14,7 @@ const resetPasswordEmail = async (req, res) => {
     }
 
     // Check if user exists
-    const result = await client.query(
+    const result = await pool.query(
       "SELECT * FROM tenants WHERE email = $1",
       [email]
     );
@@ -33,7 +33,7 @@ const resetPasswordEmail = async (req, res) => {
     const expiry = new Date(Date.now() + 2 * 60 * 1000); // 2 mins
 
     // Store hashed token and expiry in DB
-    await client.query(
+    await pool.query(
       "UPDATE tenants SET passwordresettoken = $1, passwordresettokenexpiry = $2 WHERE email = $3",
       [hashedToken, expiry, email]
     );
@@ -79,7 +79,7 @@ const resetPasswordToken = async (req, res) => {
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
     // Find tenant with valid token and expiry
-    const result = await client.query(
+    const result = await pool.query(
       `SELECT * FROM tenants
          WHERE passwordresettoken = $1 AND passwordresettokenexpiry > NOW()`,
       [hashedToken]
@@ -96,7 +96,7 @@ const resetPasswordToken = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
     // Update password and clear reset fields
-    await client.query(
+    await pool.query(
       `UPDATE tenants
          SET password = $1, passwordresettoken = NULL, passwordresettokenexpiry = NULL
          WHERE id = $2`,
