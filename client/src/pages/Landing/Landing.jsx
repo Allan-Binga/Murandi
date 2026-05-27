@@ -37,7 +37,7 @@ function LandingPage() {
         {/* Hero Section */}
         <section className="text-center py-12 px-4 sm:py-16 bg-gradient-to-br from-blue-50 to-blue-100">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Discover Your Perfect Home
+            Discover Your Next Space
           </h1>
           <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
             Find and manage your ideal apartment with Murandi’s seamless rental
@@ -48,7 +48,7 @@ function LandingPage() {
               <div key={role} className="flex flex-col items-center gap-3">
                 <Link
                   to={`/login/${role}`}
-                  className="bg-blue-600 text-white px-6 py-2.5 rounded-full hover:bg-blue-700 transition text-sm font-medium shadow-sm"
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-md hover:bg-blue-700 transition text-sm font-medium shadow-sm"
                 >
                   Login as {role.charAt(0).toUpperCase() + role.slice(1)}
                 </Link>
@@ -78,7 +78,7 @@ function LandingPage() {
               {listings.map((apt) => (
                 <div
                   key={apt.id}
-                  className={`group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition border border-gray-100 ${
+                  className={`group bg-white rounded-sm overflow-hidden shadow-md  transition border border-gray-100 ${
                     apt.leasingstatus === "Leased"
                       ? "ring-2 ring-green-300"
                       : ""
@@ -92,13 +92,13 @@ function LandingPage() {
                       loading="lazy"
                     />
                     <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                      <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium shadow-sm">
+                      <span className="bg-blue-600 text-white px-3 py-1 rounded-md text-xs font-medium shadow-sm">
                         {apt.beds === "studio"
                           ? "Studio"
                           : `${apt.beds || 1} Beds`}
                       </span>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
+                        className={`px-3 py-1 rounded-md text-xs font-medium shadow-sm ${
                           apt.leasingstatus === "Leased"
                             ? "bg-green-100 text-green-800"
                             : "bg-gray-100 text-gray-800"

@@ -41,8 +41,8 @@ function App() {
     <Router>
       <Toaster position="top-center" toastOptions={{ duration: 1800 }} />
       <Routes>
-        {/* Redirect from the root path to /login/tenant */}
-        <Route path="/" element={<Navigate to="/landing" />} />
+        
+        <Route path="/" element={<LandingPage/>} />
         <Route path="/home" element={<Home />} />
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/signup/tenant" element={<TenantRegister />} />
