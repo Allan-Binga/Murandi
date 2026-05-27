@@ -1,0 +1,53 @@
+name: Deploy Publication Site
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    name: Deployment Pipeline
+    runs-on: ubuntu-latest
+    
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Deploy to VPS
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            # Load NVM and use Node 22
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use 22
+
+            echo "Using Node version: $(node -v)"
+            echo "Using NPM version: $(npm -v)"
+
+            cd ${{ secrets.PROJECT_PATH }}
+
+            echo "Pulling latest code..."
+            git pull origin master
+
+            echo "Installing backend dependencies..."
+            npm install --legacy-peer-deps
+
+            echo "Building client..."
+            cd client
+            npm install --legacy-peer-deps
+            npm run build
+            cd ..
+
+
+            echo "Restarting PM2..."
+            pm2 reload murandi || pm2 start index.js --name murandi
+
+            echo "Deployment complete!"
+          EOF
