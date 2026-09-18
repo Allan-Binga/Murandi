@@ -59,7 +59,7 @@ jobs:
 
 
             echo "Restarting PM2..."
-            pm2 reload murandi || pm2 start index.js --name murandi
+            pm2 reload murandi || pm2 start index.js --name Murandi
 
             echo "Deployment complete!"
           EOF
