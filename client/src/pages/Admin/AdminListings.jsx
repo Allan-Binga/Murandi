@@ -76,12 +76,14 @@ function AdminListings() {
     setIsAddListingOpen(false);
     try {
       await axios.post(`${endpoint}/listings/create-listing`, formData);
+      console.log(endpoint)
       setIsAddListingOpen(false);
       const updatedListings = await getListings();
       setListings(updatedListings);
       toast.success("Listing added successfully.");
     } catch (error) {
       console.error(error);
+      console.log(error)
       toast.error("Failed to add listing.");
     }
   };

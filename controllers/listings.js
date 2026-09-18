@@ -47,15 +47,15 @@ const createListing = async (req, res) => {
       req.body;
 
     // Log the incoming request body
-    // console.log("Received createListing request:", {
-    //   title,
-    //   description,
-    //   price,
-    //   square_feet,
-    //   image,
-    //   apartmentnumber,
-    //   body: req.body, // Log the entire body for completeness
-    // });
+    console.log("Received createListing request:", {
+      title,
+      description,
+      price,
+      square_feet,
+      image,
+      apartmentnumber,
+      body: req.body, // Log the entire body for completeness
+    });
 
     // Validate input
     if (
@@ -138,6 +138,7 @@ const createListing = async (req, res) => {
       detail: error.detail,
       hint: error.hint,
     });
+    console.log(error)
     res.status(500).json({
       message: "Could not create listing.",
       error: error.message,
